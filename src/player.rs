@@ -40,7 +40,7 @@ fn move_player(
     actions: Res<Actions>,
     mut player_query: Query<&mut Transform, With<Player>>,
 ) {
-    let speed = 60.;
+    let speed = 100.;
     let movement = Vec3::new(
         actions.direction.x * speed * time.delta_seconds(),
         actions.direction.y * speed * time.delta_seconds(),
