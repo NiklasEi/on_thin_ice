@@ -1,8 +1,11 @@
 use crate::loading::{CracksData, PixelData, TextureAssets};
 use crate::player::Player;
-use crate::GameState;
+use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
+const GRID_SIZE: usize = 10;
+const GRID_X: usize = 80;
+const GRID_Y: usize = 60;
 const ICE_X: usize = 800;
 const ICE_Y: usize = 600;
 const CRACKS_X: usize = 32;
@@ -14,8 +17,13 @@ pub struct IcePlugin;
 impl Plugin for IcePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CrackTheIceTimer>()
+            .init_resource::<IceGrid>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ice))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(crack_the_ice));
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(crack_the_ice)
+                    .with_system(check_ice_grid),
+            );
     }
 }
 
@@ -87,4 +95,53 @@ fn crack_the_ice(
         cracks_layer.data[ice_pixel + offset] =
             cracks_layer.data[ice_pixel + offset].saturating_add(*data);
     }
+}
+
+struct IceGrid {
+    slots: Vec<Vec<SlotState>>,
+}
+
+impl Default for IceGrid {
+    fn default() -> Self {
+        let slots = Vec::from_iter(
+            (0..GRID_Y).map(|_| Vec::from_iter((0..GRID_X).map(|_| SlotState::Ice))),
+        );
+
+        IceGrid { slots }
+    }
+}
+
+#[derive(Copy, Clone)]
+enum SlotState {
+    Ice,
+    Cracks { step: f64 },
+    Brocken,
+}
+
+fn check_ice_grid(
+    player: Query<&Transform, With<Player>>,
+    time: Res<Time>,
+    mut grid: ResMut<IceGrid>,
+) {
+    let (x, y) = get_current_grid(player.single().translation);
+    let state = grid.slots[y][x];
+    if let SlotState::Ice = state {
+        grid.slots[y][x] = SlotState::Cracks {
+            step: time.seconds_since_startup(),
+        }
+    } else if let SlotState::Cracks { step } = state {
+        if time.seconds_since_startup() - step > 0.5 {
+            grid.slots[y][x] = SlotState::Brocken;
+            warn!("Broke!");
+        }
+    } else {
+        warn!("walking on broken ice!");
+    }
+}
+
+fn get_current_grid(translation: Vec3) -> (usize, usize) {
+    (
+        ((translation.x + WINDOW_WIDTH / 2.) / GRID_SIZE as f32) as usize,
+        ((translation.y + WINDOW_HEIGHT / 2.) / GRID_SIZE as f32) as usize,
+    )
 }

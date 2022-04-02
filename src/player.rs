@@ -1,6 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
-use crate::GameState;
+use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
 pub const PLAYER_Z: f32 = 3.;
@@ -51,8 +51,12 @@ fn move_player(
     for mut player_transform in player_query.iter_mut() {
         player_transform.translation += movement;
         player_transform.translation = player_transform.translation.clamp(
-            Vec3::new(-400. + 16., -300. + 16., PLAYER_Z),
-            Vec3::new(400. - 16., 300. - 16., PLAYER_Z),
+            Vec3::new(
+                -WINDOW_WIDTH / 2. + 16.,
+                -WINDOW_HEIGHT / 2. + 16.,
+                PLAYER_Z,
+            ),
+            Vec3::new(WINDOW_WIDTH / 2. - 16., WINDOW_HEIGHT / 2. - 16., PLAYER_Z),
         );
         player_transform.rotation =
             Quat::from_rotation_z(-actions.direction.angle_between(Vec2::new(1., 0.)));

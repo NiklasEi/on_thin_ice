@@ -15,5 +15,5 @@ impl Plugin for InternalAudioPlugin {
 
 fn start_audio(audio_assets: Res<AudioAssets>, audio: Res<Audio>) {
     audio.set_volume(0.3);
-    audio.play_looped(audio_assets.flying.clone());
+    audio.play_looped(audio_assets.walking.clone());
 }

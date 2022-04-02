@@ -17,6 +17,9 @@ use bevy::app::App;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
+pub const WINDOW_WIDTH: f32 = 800.;
+pub const WINDOW_HEIGHT: f32 = 600.;
+
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
 // Or https://github.com/bevyengine/bevy/blob/main/examples/ecs/state.rs
