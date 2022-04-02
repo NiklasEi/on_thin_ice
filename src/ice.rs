@@ -13,7 +13,8 @@ pub struct IcePlugin;
 
 impl Plugin for IcePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ice))
+        app.init_resource::<CrackTheIceTimer>()
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ice))
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(crack_the_ice));
     }
 }
@@ -25,12 +26,26 @@ fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
     });
 }
 
+pub struct CrackTheIceTimer(Timer);
+
+impl Default for CrackTheIceTimer {
+    fn default() -> Self {
+        CrackTheIceTimer(Timer::from_seconds(0.2, true))
+    }
+}
+
 fn crack_the_ice(
     player: Query<&Transform, With<Player>>,
     mut images: ResMut<Assets<Image>>,
     textures: Res<TextureAssets>,
     cracks: Res<CracksData>,
+    mut timer: ResMut<CrackTheIceTimer>,
+    time: Res<Time>,
 ) {
+    timer.0.tick(time.delta());
+    if !timer.0.just_finished() {
+        return;
+    }
     let player_transform = player.single();
     let ice_image = images
         .get_mut(textures.ice.clone())
@@ -44,12 +59,14 @@ fn crack_the_ice(
         player_center.y.clamp(0., ICE_Y as f32 - 1.) as usize,
     );
 
+    let cracks = cracks.random();
+
     for PixelData {
         row,
         column,
         offset,
         data,
-    } in &cracks.cracks_0
+    } in cracks
     {
         let ice_index = (
             player_center.0 as i64 + *row as i64 - (CRACKS_X as f32 / 2.) as i64,

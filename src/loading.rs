@@ -2,6 +2,7 @@ use crate::GameState;
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
+use rand::random;
 
 pub struct LoadingPlugin;
 
@@ -22,6 +23,19 @@ impl Plugin for LoadingPlugin {
 
 pub struct CracksData {
     pub cracks_0: Vec<PixelData>,
+    pub cracks_1: Vec<PixelData>,
+}
+
+impl CracksData {
+    pub fn random(&self) -> &Vec<PixelData> {
+        let weight: f32 = random();
+
+        if weight > 0.5 {
+            &self.cracks_0
+        } else {
+            &self.cracks_1
+        }
+    }
 }
 
 pub struct PixelData {
@@ -43,9 +57,13 @@ impl FromWorld for CracksData {
         let cracks_0_image = images
             .get(texture_assets.cracks_0.clone())
             .expect("No cracks image");
+        let cracks_1_image = images
+            .get(texture_assets.cracks_1.clone())
+            .expect("No cracks image");
 
         CracksData {
             cracks_0: filter_image_data(cracks_0_image, 32, 32, 4),
+            cracks_1: filter_image_data(cracks_1_image, 32, 32, 4),
         }
     }
 }
@@ -61,7 +79,7 @@ fn filter_image_data(
     for row in 0..rows {
         for column in 0..columns {
             for offset in 0..data_per_pixel {
-                let value = image.data[row * column + column + offset];
+                let value = image.data[(row * columns + column) * data_per_pixel + offset];
                 if value > 0 {
                     data.push(PixelData {
                         row,
@@ -106,4 +124,6 @@ pub struct TextureAssets {
     pub ice: Handle<Image>,
     #[asset(path = "textures/cracks_0.png")]
     pub cracks_0: Handle<Image>,
+    #[asset(path = "textures/cracks_1.png")]
+    pub cracks_1: Handle<Image>,
 }
