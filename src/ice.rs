@@ -11,6 +11,7 @@ const ICE_Y: usize = 600;
 const CRACKS_X: usize = 32;
 const CRACKS_Y: usize = 32;
 const DATA_PER_PIXEL: usize = 4;
+pub const ICE_HOLE_Z: f32 = 3.;
 
 pub struct IcePlugin;
 
@@ -18,11 +19,13 @@ impl Plugin for IcePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CrackTheIceTimer>()
             .init_resource::<IceGrid>()
+            .add_event::<BreakIceEvent>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ice))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(crack_the_ice)
-                    .with_system(check_ice_grid),
+                    .with_system(check_ice_grid.label(IceLabels::CheckIceGrid))
+                    .with_system(break_ice.after(IceLabels::CheckIceGrid)),
             );
     }
 }
@@ -118,24 +121,46 @@ enum SlotState {
     Brocken,
 }
 
+struct BreakIceEvent {
+    position: Vec2,
+}
+
 fn check_ice_grid(
     player: Query<&Transform, With<Player>>,
     time: Res<Time>,
     mut grid: ResMut<IceGrid>,
+    mut break_ice_events: EventWriter<BreakIceEvent>,
 ) {
-    let (x, y) = get_current_grid(player.single().translation);
+    let player_translation = player.single().translation;
+    let (x, y) = get_current_grid(player_translation);
     let state = grid.slots[y][x];
     if let SlotState::Ice = state {
         grid.slots[y][x] = SlotState::Cracks {
             step: time.seconds_since_startup(),
         }
     } else if let SlotState::Cracks { step } = state {
-        if time.seconds_since_startup() - step > 0.5 {
+        if time.seconds_since_startup() - step > 0.15 {
             grid.slots[y][x] = SlotState::Brocken;
-            warn!("Broke!");
+            break_ice_events.send(BreakIceEvent {
+                position: Vec2::new(player_translation.x, player_translation.y),
+            });
         }
     } else {
         warn!("walking on broken ice!");
+    }
+}
+
+fn break_ice(
+    mut events: EventReader<BreakIceEvent>,
+    mut commands: Commands,
+    textures: Res<TextureAssets>,
+) {
+    for BreakIceEvent { position } in events.iter() {
+        commands.spawn_bundle(SpriteBundle {
+            texture: textures.hole.clone(),
+            transform: Transform::from_xyz(position.x, position.y, ICE_HOLE_Z),
+            ..Default::default()
+        });
     }
 }
 
@@ -144,4 +169,9 @@ fn get_current_grid(translation: Vec3) -> (usize, usize) {
         ((translation.x + WINDOW_WIDTH / 2.) / GRID_SIZE as f32) as usize,
         ((translation.y + WINDOW_HEIGHT / 2.) / GRID_SIZE as f32) as usize,
     )
+}
+
+#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+pub enum IceLabels {
+    CheckIceGrid,
 }

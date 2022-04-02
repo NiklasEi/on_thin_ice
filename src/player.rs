@@ -3,7 +3,7 @@ use crate::loading::TextureAssets;
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
-pub const PLAYER_Z: f32 = 3.;
+pub const PLAYER_Z: f32 = 4.;
 
 pub struct PlayerPlugin;
 
