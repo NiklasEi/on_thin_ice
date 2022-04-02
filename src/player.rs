@@ -28,7 +28,7 @@ fn spawn_camera(mut commands: Commands) {
 fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
         .spawn_bundle(SpriteBundle {
-            texture: textures.texture_bevy.clone(),
+            texture: textures.player.clone(),
             transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
             ..Default::default()
         })
@@ -40,16 +40,15 @@ fn move_player(
     actions: Res<Actions>,
     mut player_query: Query<&mut Transform, With<Player>>,
 ) {
-    if actions.player_movement.is_none() {
-        return;
-    }
-    let speed = 150.;
+    let speed = 60.;
     let movement = Vec3::new(
-        actions.player_movement.unwrap().x * speed * time.delta_seconds(),
-        actions.player_movement.unwrap().y * speed * time.delta_seconds(),
+        actions.direction.x * speed * time.delta_seconds(),
+        actions.direction.y * speed * time.delta_seconds(),
         0.,
     );
     for mut player_transform in player_query.iter_mut() {
         player_transform.translation += movement;
+        player_transform.rotation =
+            Quat::from_rotation_z(-actions.direction.angle_between(Vec2::new(1., 0.)));
     }
 }

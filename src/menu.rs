@@ -40,7 +40,7 @@ fn setup_menu(
     commands
         .spawn_bundle(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(120.0), Val::Px(50.0)),
+                size: Size::new(Val::Px(350.0), Val::Px(50.0)),
                 margin: Rect::all(Val::Auto),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -54,7 +54,7 @@ fn setup_menu(
             parent.spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
-                        value: "Play".to_string(),
+                        value: "Take the first step".to_string(),
                         style: TextStyle {
                             font: font_assets.fira_sans.clone(),
                             font_size: 40.0,

@@ -3,7 +3,7 @@
 
 use bevy::prelude::{App, ClearColor, Color, Msaa, WindowDescriptor};
 use bevy::DefaultPlugins;
-use bevy_game::GamePlugin;
+use on_thin_ice::GamePlugin;
 
 fn main() {
     App::new()
