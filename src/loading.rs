@@ -118,8 +118,9 @@ pub struct AudioAssets {
 
 #[derive(AssetCollection)]
 pub struct TextureAssets {
-    #[asset(path = "textures/blue_square.png")]
-    pub player: Handle<Image>,
+    #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 4, rows = 1))]
+    #[asset(path = "textures/player.png")]
+    pub player: Handle<TextureAtlas>,
     #[asset(path = "textures/ice.png")]
     pub ice: Handle<Image>,
     #[asset(path = "textures/hole.png")]

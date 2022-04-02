@@ -22,7 +22,7 @@ pub struct Actions {
 impl Default for Actions {
     fn default() -> Self {
         Actions {
-            direction: Vec2::new(1., 0.),
+            direction: Vec2::new(0., 1.),
             steering: None,
         }
     }

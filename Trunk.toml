@@ -1,2 +1,2 @@
 [watch]
-watch = ["./src", "./assets"]
+watch = ["./src", "./assets", "Cargo.toml"]

@@ -19,7 +19,11 @@ impl Plugin for PlayerPlugin {
                 .with_system(spawn_player)
                 .with_system(spawn_camera),
         )
-        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_player));
+        .add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(move_player)
+                .with_system(animate_player),
+        );
     }
 }
 
@@ -29,12 +33,28 @@ fn spawn_camera(mut commands: Commands) {
 
 fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
-        .spawn_bundle(SpriteBundle {
-            texture: textures.player.clone(),
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: textures.player.clone(),
             transform: Transform::from_translation(Vec3::new(0., 0., PLAYER_Z)),
             ..Default::default()
         })
-        .insert(Player);
+        .insert(Player)
+        .insert(PlayerAnimationTimer(Timer::from_seconds(0.2, true)));
+}
+
+#[derive(Component)]
+struct PlayerAnimationTimer(Timer);
+
+fn animate_player(
+    time: Res<Time>,
+    mut query: Query<(&mut PlayerAnimationTimer, &mut TextureAtlasSprite)>,
+) {
+    for (mut timer, mut sprite) in query.iter_mut() {
+        timer.0.tick(time.delta());
+        if timer.0.finished() {
+            sprite.index = (sprite.index + 1) % 4;
+        }
+    }
 }
 
 fn move_player(
@@ -59,6 +79,6 @@ fn move_player(
             Vec3::new(WINDOW_WIDTH / 2. - 16., WINDOW_HEIGHT / 2. - 16., PLAYER_Z),
         );
         player_transform.rotation =
-            Quat::from_rotation_z(-actions.direction.angle_between(Vec2::new(1., 0.)));
+            Quat::from_rotation_z(-actions.direction.angle_between(Vec2::new(0., 1.)));
     }
 }
