@@ -24,6 +24,10 @@ fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
         texture: textures.ice.clone(),
         ..Default::default()
     });
+    commands.spawn_bundle(SpriteBundle {
+        texture: textures.cracks_layer.clone(),
+        ..Default::default()
+    });
 }
 
 pub struct CrackTheIceTimer(Timer);
@@ -47,9 +51,9 @@ fn crack_the_ice(
         return;
     }
     let player_transform = player.single();
-    let ice_image = images
-        .get_mut(textures.ice.clone())
-        .expect("Failed to find the ice texture");
+    let cracks_layer = images
+        .get_mut(textures.cracks_layer.clone())
+        .expect("Failed to find the cracks_layer texture");
     let player_center = Vec2::new(
         player_transform.translation.x + ICE_X as f32 / 2.,
         ICE_Y as f32 / 2. - player_transform.translation.y,
@@ -80,6 +84,7 @@ fn crack_the_ice(
             continue;
         };
         let ice_pixel = (ice_index.1 as usize * ICE_X + ice_index.0 as usize) * DATA_PER_PIXEL;
-        ice_image.data[ice_pixel + offset] = *data;
+        cracks_layer.data[ice_pixel + offset] =
+            cracks_layer.data[ice_pixel + offset].saturating_add(*data);
     }
 }

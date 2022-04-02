@@ -122,6 +122,8 @@ pub struct TextureAssets {
     pub player: Handle<Image>,
     #[asset(path = "textures/ice.png")]
     pub ice: Handle<Image>,
+    #[asset(path = "textures/cracks_layer.png")]
+    pub cracks_layer: Handle<Image>,
     #[asset(path = "textures/cracks_0.png")]
     pub cracks_0: Handle<Image>,
     #[asset(path = "textures/cracks_1.png")]
