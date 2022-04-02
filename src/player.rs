@@ -3,6 +3,8 @@ use crate::loading::TextureAssets;
 use crate::GameState;
 use bevy::prelude::*;
 
+pub const PLAYER_Z: f32 = 3.;
+
 pub struct PlayerPlugin;
 
 #[derive(Component)]
@@ -29,7 +31,7 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
         .spawn_bundle(SpriteBundle {
             texture: textures.player.clone(),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            transform: Transform::from_translation(Vec3::new(0., 0., PLAYER_Z)),
             ..Default::default()
         })
         .insert(Player);
@@ -48,6 +50,10 @@ fn move_player(
     );
     for mut player_transform in player_query.iter_mut() {
         player_transform.translation += movement;
+        player_transform.translation = player_transform.translation.clamp(
+            Vec3::new(-400. + 16., -300. + 16., PLAYER_Z),
+            Vec3::new(400. - 16., 300. - 16., PLAYER_Z),
+        );
         player_transform.rotation =
             Quat::from_rotation_z(-actions.direction.angle_between(Vec2::new(1., 0.)));
     }
