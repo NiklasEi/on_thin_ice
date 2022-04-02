@@ -4,6 +4,7 @@ mod ice;
 mod loading;
 mod menu;
 mod player;
+mod ui;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
@@ -12,6 +13,7 @@ use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 
 use crate::ice::IcePlugin;
+use crate::ui::UiPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -40,6 +42,7 @@ impl Plugin for GamePlugin {
         app.add_state(GameState::Loading)
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
+            .add_plugin(UiPlugin)
             .add_plugin(IcePlugin)
             .add_plugin(ActionsPlugin)
             .add_plugin(InternalAudioPlugin)

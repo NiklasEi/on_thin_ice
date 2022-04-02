@@ -25,7 +25,11 @@ impl Plugin for IcePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(crack_the_ice)
                     .with_system(check_ice_grid.label(IceLabels::CheckIceGrid))
-                    .with_system(break_ice.after(IceLabels::CheckIceGrid)),
+                    .with_system(
+                        break_ice
+                            .label(IceLabels::BreakIce)
+                            .after(IceLabels::CheckIceGrid),
+                    ),
             );
     }
 }
@@ -174,4 +178,5 @@ fn get_current_grid(translation: Vec3) -> (usize, usize) {
 #[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
 pub enum IceLabels {
     CheckIceGrid,
+    BreakIce,
 }
