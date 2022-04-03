@@ -70,7 +70,7 @@ fn move_player(
     actions: Res<Actions>,
     mut player_query: Query<&mut Transform, (With<Player>, Without<Drowning>)>,
 ) {
-    let speed = 100.;
+    let speed = 70.;
     let movement = Vec3::new(
         actions.direction.x * speed * time.delta_seconds(),
         actions.direction.y * speed * time.delta_seconds(),

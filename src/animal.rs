@@ -50,7 +50,7 @@ fn move_animals(
         (With<Animal>, Without<Drowning>),
     >,
 ) {
-    let speed = 100.;
+    let speed = 50.;
     for (mut transform, mut walking, mut steering) in player_query.iter_mut() {
         let steering_rand: f32 = random();
         if let Some(steering_value) = steering.0.clone() {
