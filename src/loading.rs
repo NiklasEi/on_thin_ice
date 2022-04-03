@@ -169,4 +169,6 @@ pub struct TextureAssets {
     pub cracks_0: Handle<Image>,
     #[asset(path = "textures/cracks_1.png")]
     pub cracks_1: Handle<Image>,
+    #[asset(path = "textures/end.png")]
+    pub end: Handle<Image>,
 }
