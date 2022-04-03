@@ -133,9 +133,8 @@ pub struct TextureAssets {
     #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 4, rows = 1))]
     #[asset(path = "textures/player.png")]
     pub player: Handle<TextureAtlas>,
-    #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 4, rows = 1))]
     #[asset(path = "textures/animal.png")]
-    pub animal: Handle<TextureAtlas>,
+    pub animal: Handle<Image>,
     #[asset(path = "textures/ice.png")]
     pub ice: Handle<Image>,
     #[asset(path = "textures/hole.png")]

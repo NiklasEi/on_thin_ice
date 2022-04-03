@@ -1,6 +1,6 @@
 use crate::ice::IceLabels;
 use crate::loading::TextureAssets;
-use crate::player::{AnimalFallEvent, AnimationTimer, Drowning};
+use crate::player::{AnimalFallEvent, Drowning};
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::math::Mat2;
 use bevy::prelude::*;
@@ -32,15 +32,14 @@ pub struct Steering(Option<f32>);
 
 fn spawn_animals(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: textures.animal.clone(),
+        .spawn_bundle(SpriteBundle {
+            texture: textures.animal.clone(),
             transform: Transform::from_translation(Vec3::new(150., 50., ANIMAL_Z)),
             ..Default::default()
         })
         .insert(Animal)
         .insert(Walking(Vec2::new(-1., -0.5)))
-        .insert(Steering(None))
-        .insert(AnimationTimer(Timer::from_seconds(0.2, true)));
+        .insert(Steering(None));
 }
 
 fn move_animals(
