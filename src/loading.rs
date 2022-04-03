@@ -1,5 +1,6 @@
 use crate::GameState;
 use bevy::prelude::*;
+use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
 use rand::random;
@@ -18,6 +19,29 @@ impl Plugin for LoadingPlugin {
             .init_resource::<CracksData>()
             .continue_to_state(GameState::Menu)
             .build(app);
+    }
+}
+
+pub struct CracksLayer {
+    pub layer: Handle<Image>,
+}
+
+impl FromWorld for CracksLayer {
+    fn from_world(world: &mut World) -> Self {
+        let cell = world.cell();
+        let mut images = cell.get_resource_mut::<Assets<Image>>().unwrap();
+        let layer = images.add(Image::new_fill(
+            Extent3d {
+                width: 800,
+                height: 600,
+                depth_or_array_layers: 1,
+            },
+            TextureDimension::D2,
+            &[0u8, 0u8, 0u8, 0u8],
+            TextureFormat::Rgba8UnormSrgb,
+        ));
+
+        CracksLayer { layer }
     }
 }
 
@@ -141,8 +165,6 @@ pub struct TextureAssets {
     pub ice: Handle<Image>,
     #[asset(path = "textures/hole.png")]
     pub hole: Handle<Image>,
-    #[asset(path = "textures/cracks_layer.png")]
-    pub cracks_layer: Handle<Image>,
     #[asset(path = "textures/cracks_0.png")]
     pub cracks_0: Handle<Image>,
     #[asset(path = "textures/cracks_1.png")]

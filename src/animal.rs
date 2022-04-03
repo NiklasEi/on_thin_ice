@@ -1,7 +1,7 @@
 use crate::ice::IceLabels;
 use crate::loading::TextureAssets;
 use crate::player::{AnimalFallEvent, Drowning};
-use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::math::Mat2;
 use bevy::prelude::*;
 use rand::random;
@@ -37,6 +37,7 @@ fn spawn_animals(mut commands: Commands, textures: Res<TextureAssets>) {
             transform: Transform::from_translation(Vec3::new(150., 50., ANIMAL_Z)),
             ..Default::default()
         })
+        .insert(Level)
         .insert(Animal)
         .insert(Walking(Vec2::new(-1., -0.5)))
         .insert(Steering(None));

@@ -1,6 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
-use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
 pub const PLAYER_Z: f32 = 5.;
@@ -36,6 +36,7 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
             ..Default::default()
         })
         .insert(Player)
+        .insert(Level)
         .insert(AnimationTimer(Timer::from_seconds(0.2, true)));
 }
 

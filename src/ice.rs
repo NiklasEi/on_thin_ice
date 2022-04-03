@@ -1,7 +1,7 @@
 use crate::animal::Animal;
-use crate::loading::{CracksData, PixelData, TextureAssets};
+use crate::loading::{CracksData, CracksLayer, PixelData, TextureAssets};
 use crate::player::{AnimalFallEvent, Drowning, Player, PlayerFallEvent};
-use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
 const GRID_SIZE: usize = 10;
@@ -19,8 +19,11 @@ pub struct IcePlugin;
 impl Plugin for IcePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CrackTheIceTimer>()
-            .init_resource::<IceGrid>()
             .add_event::<BreakIceEvent>()
+            .add_system_set(
+                SystemSet::on_enter(GameState::Playing)
+                    .with_system(prepare_cracks_layer.exclusive_system().at_start()),
+            )
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(spawn_ice))
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_cracks_layer))
             .add_system_set(
@@ -36,6 +39,11 @@ impl Plugin for IcePlugin {
     }
 }
 
+fn prepare_cracks_layer(world: &mut World) {
+    let cracks_layer = CracksLayer::from_world(world);
+    world.insert_resource(cracks_layer);
+}
+
 fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn_bundle(SpriteBundle {
         texture: textures.ice.clone(),
@@ -43,11 +51,15 @@ fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
     });
 }
 
-fn spawn_cracks_layer(mut commands: Commands, textures: Res<TextureAssets>) {
-    commands.spawn_bundle(SpriteBundle {
-        texture: textures.cracks_layer.clone(),
-        ..Default::default()
-    });
+fn spawn_cracks_layer(mut commands: Commands, textures: Res<CracksLayer>) {
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: textures.layer.clone(),
+            transform: Transform::from_xyz(0., 0., 1.),
+            ..Default::default()
+        })
+        .insert(Level);
+    commands.insert_resource(IceGrid::default());
 }
 
 pub struct CrackTheIceTimer(Timer);
@@ -62,7 +74,7 @@ fn crack_the_ice(
     player: Query<&Transform, (With<Player>, Without<Animal>)>,
     animals: Query<&Transform, (With<Animal>, Without<Player>)>,
     mut images: ResMut<Assets<Image>>,
-    textures: Res<TextureAssets>,
+    textures: Res<CracksLayer>,
     cracks: Res<CracksData>,
     mut timer: ResMut<CrackTheIceTimer>,
     time: Res<Time>,
@@ -72,7 +84,7 @@ fn crack_the_ice(
         return;
     }
     let cracks_layer = images
-        .get_mut(textures.cracks_layer.clone())
+        .get_mut(textures.layer.clone())
         .expect("Failed to find the cracks_layer texture");
     let player_transform = player.single();
     crack_ice_at(&player_transform.translation, &cracks, cracks_layer);
@@ -220,11 +232,13 @@ fn break_ice(
     textures: Res<TextureAssets>,
 ) {
     for BreakIceEvent { position } in events.iter() {
-        commands.spawn_bundle(SpriteBundle {
-            texture: textures.hole.clone(),
-            transform: Transform::from_xyz(position.x, position.y, ICE_HOLE_Z),
-            ..Default::default()
-        });
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: textures.hole.clone(),
+                transform: Transform::from_xyz(position.x, position.y, ICE_HOLE_Z),
+                ..Default::default()
+            })
+            .insert(Level);
     }
 }
 

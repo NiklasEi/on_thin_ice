@@ -1,7 +1,8 @@
 use crate::ice::IceLabels;
 use crate::loading::FontAssets;
+use crate::menu::ButtonColors;
 use crate::player::{Drowning, Player, PlayerFallEvent};
-use crate::GameState;
+use crate::{GameState, Level};
 use bevy::core::Stopwatch;
 use bevy::prelude::*;
 
@@ -9,17 +10,19 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GameStopWatch>()
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_timer))
+        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_timer))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(update_timer.after(IceLabels::BreakIce))
-                    .with_system(player_fall.after(IceLabels::CheckIceGrid)),
+                    .with_system(player_fall.after(IceLabels::CheckIceGrid))
+                    .with_system(spawn_restart_button.after(IceLabels::CheckIceGrid))
+                    .with_system(click_restart_button.after(IceLabels::CheckIceGrid)),
             );
     }
 }
 
 fn spawn_timer(mut commands: Commands, font_assets: Res<FontAssets>) {
+    commands.insert_resource(GameStopWatch::default());
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -42,6 +45,7 @@ fn spawn_timer(mut commands: Commands, font_assets: Res<FontAssets>) {
             }),
             ..Default::default()
         })
+        .insert(Level)
         .with_children(|parent| {
             parent
                 .spawn_bundle(TextBundle {
@@ -82,6 +86,14 @@ fn update_timer(
     timer_text.single_mut().sections[0].value = format!("{:.2}", game_stop_watch.0.elapsed_secs());
 }
 
+struct RestartTimer(Timer);
+
+impl Default for RestartTimer {
+    fn default() -> Self {
+        RestartTimer(Timer::from_seconds(3., false))
+    }
+}
+
 fn player_fall(
     mut commands: Commands,
     mut events: EventReader<PlayerFallEvent>,
@@ -91,5 +103,74 @@ fn player_fall(
     for _ in events.iter() {
         game_stop_watch.0.pause();
         commands.entity(player.single()).insert(Drowning);
+        commands.insert_resource(RestartTimer::default());
+    }
+}
+
+fn spawn_restart_button(
+    mut commands: Commands,
+    time: Res<Time>,
+    restart_timer: Option<ResMut<RestartTimer>>,
+    font_assets: Res<FontAssets>,
+    button_colors: Res<ButtonColors>,
+) {
+    if let Some(mut timer) = restart_timer {
+        timer.0.tick(time.delta());
+        if timer.0.just_finished() {
+            commands.remove_resource::<RestartTimer>();
+            commands
+                .spawn_bundle(ButtonBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(250.0), Val::Px(50.0)),
+                        margin: Rect::all(Val::Auto),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    color: button_colors.normal,
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    parent.spawn_bundle(TextBundle {
+                        text: Text {
+                            sections: vec![TextSection {
+                                value: "Try again!".to_string(),
+                                style: TextStyle {
+                                    font: font_assets.fira_sans.clone(),
+                                    font_size: 40.0,
+                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                },
+                            }],
+                            alignment: Default::default(),
+                        },
+                        ..Default::default()
+                    });
+                });
+        }
+    }
+}
+
+fn click_restart_button(
+    mut commands: Commands,
+    button_colors: Res<ButtonColors>,
+    mut state: ResMut<State<GameState>>,
+    mut interaction_query: Query<
+        (Entity, &Interaction, &mut UiColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+) {
+    for (button, interaction, mut color) in interaction_query.iter_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                commands.entity(button).despawn_recursive();
+                state.set(GameState::Restart).unwrap();
+            }
+            Interaction::Hovered => {
+                *color = button_colors.hovered;
+            }
+            Interaction::None => {
+                *color = button_colors.normal;
+            }
+        }
     }
 }

@@ -14,9 +14,9 @@ impl Plugin for MenuPlugin {
     }
 }
 
-struct ButtonColors {
-    normal: UiColor,
-    hovered: UiColor,
+pub struct ButtonColors {
+    pub normal: UiColor,
+    pub hovered: UiColor,
 }
 
 impl Default for ButtonColors {
@@ -27,9 +27,6 @@ impl Default for ButtonColors {
         }
     }
 }
-
-#[derive(Component)]
-struct PlayButton;
 
 fn setup_menu(
     mut commands: Commands,
@@ -48,7 +45,6 @@ fn setup_menu(
             color: button_colors.normal,
             ..Default::default()
         })
-        .insert(PlayButton)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
                 text: Text {
@@ -67,21 +63,19 @@ fn setup_menu(
         });
 }
 
-type ButtonInteraction<'a> = (Entity, &'a Interaction, &'a mut UiColor, &'a Children);
-
 fn click_play_button(
     mut commands: Commands,
     button_colors: Res<ButtonColors>,
     mut state: ResMut<State<GameState>>,
-    mut interaction_query: Query<ButtonInteraction, (Changed<Interaction>, With<Button>)>,
-    text_query: Query<Entity, With<Text>>,
+    mut interaction_query: Query<
+        (Entity, &Interaction, &mut UiColor),
+        (Changed<Interaction>, With<Button>),
+    >,
 ) {
-    for (button, interaction, mut color, children) in interaction_query.iter_mut() {
-        let text = text_query.get(children[0]).unwrap();
+    for (button, interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
-                commands.entity(button).despawn();
-                commands.entity(text).despawn();
+                commands.entity(button).despawn_recursive();
                 state.set(GameState::Playing).unwrap();
             }
             Interaction::Hovered => {
