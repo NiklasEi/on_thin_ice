@@ -1,6 +1,6 @@
 use crate::animal::Animal;
 use crate::loading::{CracksData, PixelData, TextureAssets};
-use crate::player::{Player, PlayerFallEvent};
+use crate::player::{AnimalFallEvent, Drowning, Player, PlayerFallEvent};
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
@@ -140,14 +140,30 @@ struct BreakIceEvent {
 }
 
 fn check_ice_grid(
-    player: Query<&Transform, (With<Player>, Without<Animal>)>,
-    animals: Query<&Transform, (With<Animal>, Without<Player>)>,
+    player: Query<&Transform, (With<Player>, Without<Animal>, Without<Drowning>)>,
+    animals: Query<(Entity, &Transform), (With<Animal>, Without<Player>, Without<Drowning>)>,
     time: Res<Time>,
     mut grid: ResMut<IceGrid>,
     mut break_ice_events: EventWriter<BreakIceEvent>,
     mut player_fall_event: EventWriter<PlayerFallEvent>,
+    mut animal_fall_event: EventWriter<AnimalFallEvent>,
 ) {
-    for Transform { translation, .. } in animals.iter() {
+    for (entity, Transform { translation, .. }) in animals.iter() {
+        match update_and_return_ice_slot_state(
+            time.seconds_since_startup(),
+            &translation,
+            &mut grid,
+        ) {
+            WasUpdated::Yes(SlotState::Brocken) => {
+                break_ice_events.send(BreakIceEvent {
+                    position: Vec2::new(translation.x, translation.y),
+                });
+                animal_fall_event.send(AnimalFallEvent(entity));
+            }
+            _ => (),
+        }
+    }
+    for Transform { translation, .. } in player.iter() {
         match update_and_return_ice_slot_state(
             time.seconds_since_startup(),
             &translation,
@@ -158,21 +174,10 @@ fn check_ice_grid(
                     position: Vec2::new(translation.x, translation.y),
                 });
                 // only for player
-                // player_fall_event.send(PlayerFallEvent);
+                player_fall_event.send(PlayerFallEvent);
             }
             _ => (),
         }
-    }
-    let translation = player.single().translation;
-    match update_and_return_ice_slot_state(time.seconds_since_startup(), &translation, &mut grid) {
-        WasUpdated::Yes(SlotState::Brocken) => {
-            break_ice_events.send(BreakIceEvent {
-                position: Vec2::new(translation.x, translation.y),
-            });
-            // only for player
-            player_fall_event.send(PlayerFallEvent);
-        }
-        _ => (),
     }
 }
 

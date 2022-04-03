@@ -15,6 +15,7 @@ pub struct Player;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerFallEvent>()
+            .add_event::<AnimalFallEvent>()
             .add_system_set(
                 SystemSet::on_enter(GameState::Playing)
                     .with_system(spawn_player)
@@ -29,6 +30,7 @@ impl Plugin for PlayerPlugin {
 }
 
 pub struct PlayerFallEvent;
+pub struct AnimalFallEvent(pub Entity);
 
 fn spawn_camera(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
