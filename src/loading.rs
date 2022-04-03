@@ -116,6 +116,8 @@ pub struct AudioAssets {
     pub walking: Handle<AudioSource>,
     #[asset(path = "audio/background.ogg")]
     pub background: Handle<AudioSource>,
+    #[asset(path = "audio/blub.ogg")]
+    pub blub: Handle<AudioSource>,
     #[asset(path = "audio/ice_breaking.ogg")]
     pub breaking_ice: Handle<AudioSource>,
     #[asset(path = "audio/ice_background_0.ogg")]

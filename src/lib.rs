@@ -51,10 +51,17 @@ impl Plugin for GamePlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(AnimalPlugin);
 
+        app.add_system_set(SystemSet::on_exit(GameState::Loading).with_system(setup_cameras));
+
         #[cfg(debug_assertions)]
         {
             app.add_plugin(FrameTimeDiagnosticsPlugin::default())
                 .add_plugin(LogDiagnosticsPlugin::default());
         }
     }
+}
+
+fn setup_cameras(mut commands: Commands) {
+    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }

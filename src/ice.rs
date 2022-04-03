@@ -21,7 +21,8 @@ impl Plugin for IcePlugin {
         app.init_resource::<CrackTheIceTimer>()
             .init_resource::<IceGrid>()
             .add_event::<BreakIceEvent>()
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ice))
+            .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(spawn_ice))
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_cracks_layer))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(crack_the_ice)
@@ -40,6 +41,9 @@ fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
         texture: textures.ice.clone(),
         ..Default::default()
     });
+}
+
+fn spawn_cracks_layer(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn_bundle(SpriteBundle {
         texture: textures.cracks_layer.clone(),
         ..Default::default()
