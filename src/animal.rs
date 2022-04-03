@@ -35,21 +35,23 @@ fn spawn_animals(
     textures: Res<TextureAssets>,
     mut spawn_points: ResMut<SpawnPoints>,
 ) {
-    let random_spawn_point = get_random_spawn_point(&mut spawn_points);
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: textures.animal.clone(),
-            transform: Transform::from_translation(Vec3::new(
-                random_spawn_point.x,
-                random_spawn_point.y,
-                ANIMAL_Z,
-            )),
-            ..Default::default()
-        })
-        .insert(Level)
-        .insert(Animal)
-        .insert(Walking(get_random_direction()))
-        .insert(Steering(None));
+    for _ in 0..5 {
+        let random_spawn_point = get_random_spawn_point(&mut spawn_points);
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: textures.animal.clone(),
+                transform: Transform::from_translation(Vec3::new(
+                    random_spawn_point.x,
+                    random_spawn_point.y,
+                    ANIMAL_Z,
+                )),
+                ..Default::default()
+            })
+            .insert(Level)
+            .insert(Animal)
+            .insert(Walking(get_random_direction()))
+            .insert(Steering(None));
+    }
 }
 
 fn move_animals(

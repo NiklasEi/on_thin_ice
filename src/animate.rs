@@ -34,6 +34,6 @@ fn animate_drowning(time: Res<Time>, mut query: Query<(&mut Drowning, &mut Trans
             return;
         }
         timer.0.tick(time.delta());
-        transform.scale = Vec3::splat(1.0 - timer.0.percent());
+        transform.scale = Vec3::new(1.0 - timer.0.percent(), 1.0 - timer.0.percent(), 1.);
     }
 }
