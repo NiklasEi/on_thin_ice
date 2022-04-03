@@ -1,3 +1,4 @@
+use crate::animal::Animal;
 use crate::loading::{CracksData, PixelData, TextureAssets};
 use crate::player::{Player, PlayerFallEvent};
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -54,7 +55,8 @@ impl Default for CrackTheIceTimer {
 }
 
 fn crack_the_ice(
-    player: Query<&Transform, With<Player>>,
+    player: Query<&Transform, (With<Player>, Without<Animal>)>,
+    animals: Query<&Transform, (With<Animal>, Without<Player>)>,
     mut images: ResMut<Assets<Image>>,
     textures: Res<TextureAssets>,
     cracks: Res<CracksData>,
@@ -65,17 +67,25 @@ fn crack_the_ice(
     if !timer.0.just_finished() {
         return;
     }
-    let player_transform = player.single();
     let cracks_layer = images
         .get_mut(textures.cracks_layer.clone())
         .expect("Failed to find the cracks_layer texture");
-    let player_center = Vec2::new(
-        player_transform.translation.x + ICE_X as f32 / 2.,
-        ICE_Y as f32 / 2. - player_transform.translation.y,
+    let player_transform = player.single();
+    crack_ice_at(&player_transform.translation, &cracks, cracks_layer);
+
+    for animal_transform in animals.iter() {
+        crack_ice_at(&animal_transform.translation, &cracks, cracks_layer);
+    }
+}
+
+fn crack_ice_at(translation: &Vec3, cracks: &CracksData, cracks_layer: &mut Image) {
+    let center = Vec2::new(
+        translation.x + ICE_X as f32 / 2.,
+        ICE_Y as f32 / 2. - translation.y,
     );
-    let player_center: (usize, usize) = (
-        player_center.x.clamp(0., ICE_X as f32 - 1.) as usize,
-        player_center.y.clamp(0., ICE_Y as f32 - 1.) as usize,
+    let center: (usize, usize) = (
+        center.x.clamp(0., ICE_X as f32 - 1.) as usize,
+        center.y.clamp(0., ICE_Y as f32 - 1.) as usize,
     );
 
     let cracks = cracks.random();
@@ -88,8 +98,8 @@ fn crack_the_ice(
     } in cracks
     {
         let ice_index = (
-            player_center.0 as i64 + *row as i64 - (CRACKS_X as f32 / 2.) as i64,
-            player_center.1 as i64 + *column as i64 - (CRACKS_Y as f32 / 2.) as i64,
+            center.0 as i64 + *row as i64 - (CRACKS_X as f32 / 2.) as i64,
+            center.1 as i64 + *column as i64 - (CRACKS_Y as f32 / 2.) as i64,
         );
         if ice_index.0 < 0
             || ice_index.0 >= ICE_X as i64
@@ -130,18 +140,31 @@ struct BreakIceEvent {
 }
 
 fn check_ice_grid(
-    player: Query<&Transform, With<Player>>,
+    player: Query<&Transform, (With<Player>, Without<Animal>)>,
+    animals: Query<&Transform, (With<Animal>, Without<Player>)>,
     time: Res<Time>,
     mut grid: ResMut<IceGrid>,
     mut break_ice_events: EventWriter<BreakIceEvent>,
     mut player_fall_event: EventWriter<PlayerFallEvent>,
 ) {
+    for Transform { translation, .. } in animals.iter() {
+        match update_and_return_ice_slot_state(
+            time.seconds_since_startup(),
+            &translation,
+            &mut grid,
+        ) {
+            WasUpdated::Yes(SlotState::Brocken) => {
+                break_ice_events.send(BreakIceEvent {
+                    position: Vec2::new(translation.x, translation.y),
+                });
+                // only for player
+                // player_fall_event.send(PlayerFallEvent);
+            }
+            _ => (),
+        }
+    }
     let translation = player.single().translation;
-    match update_and_return_ice_slot_state(
-        time.seconds_since_startup(),
-        translation.clone(),
-        &mut grid,
-    ) {
+    match update_and_return_ice_slot_state(time.seconds_since_startup(), &translation, &mut grid) {
         WasUpdated::Yes(SlotState::Brocken) => {
             break_ice_events.send(BreakIceEvent {
                 position: Vec2::new(translation.x, translation.y),
@@ -160,7 +183,7 @@ enum WasUpdated<T> {
 
 fn update_and_return_ice_slot_state(
     seconds_since_startup: f64,
-    translation: Vec3,
+    translation: &Vec3,
     grid: &mut IceGrid,
 ) -> WasUpdated<SlotState> {
     let (x, y) = get_current_grid(translation);
@@ -196,7 +219,7 @@ fn break_ice(
     }
 }
 
-fn get_current_grid(translation: Vec3) -> (usize, usize) {
+fn get_current_grid(translation: &Vec3) -> (usize, usize) {
     (
         ((translation.x + WINDOW_WIDTH / 2.) / GRID_SIZE as f32) as usize,
         ((translation.y + WINDOW_HEIGHT / 2.) / GRID_SIZE as f32) as usize,

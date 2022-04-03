@@ -3,7 +3,7 @@ use crate::loading::TextureAssets;
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
-pub const PLAYER_Z: f32 = 4.;
+pub const PLAYER_Z: f32 = 5.;
 
 pub struct PlayerPlugin;
 
@@ -23,7 +23,7 @@ impl Plugin for PlayerPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(move_player)
-                    .with_system(animate_player),
+                    .with_system(animate),
             );
     }
 }
@@ -42,18 +42,18 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
             ..Default::default()
         })
         .insert(Player)
-        .insert(PlayerAnimationTimer(Timer::from_seconds(0.2, true)));
+        .insert(AnimationTimer(Timer::from_seconds(0.2, true)));
 }
 
 #[derive(Component)]
-struct PlayerAnimationTimer(Timer);
+pub struct AnimationTimer(pub Timer);
 
 #[derive(Component)]
 pub struct Drowning;
 
-fn animate_player(
+fn animate(
     time: Res<Time>,
-    mut query: Query<(&mut PlayerAnimationTimer, &mut TextureAtlasSprite), Without<Drowning>>,
+    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite), Without<Drowning>>,
 ) {
     for (mut timer, mut sprite) in query.iter_mut() {
         timer.0.tick(time.delta());

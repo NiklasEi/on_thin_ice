@@ -1,4 +1,5 @@
 mod actions;
+mod animal;
 mod audio;
 mod ice;
 mod loading;
@@ -12,6 +13,7 @@ use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 
+use crate::animal::AnimalPlugin;
 use crate::ice::IcePlugin;
 use crate::ui::UiPlugin;
 use bevy::app::App;
@@ -46,7 +48,8 @@ impl Plugin for GamePlugin {
             .add_plugin(IcePlugin)
             .add_plugin(ActionsPlugin)
             .add_plugin(InternalAudioPlugin)
-            .add_plugin(PlayerPlugin);
+            .add_plugin(PlayerPlugin)
+            .add_plugin(AnimalPlugin);
 
         #[cfg(debug_assertions)]
         {
