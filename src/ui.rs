@@ -8,6 +8,8 @@ use bevy::prelude::*;
 
 pub struct UiPlugin;
 
+pub const END_Z: f32 = 10.;
+
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HighScore>()
@@ -179,6 +181,7 @@ fn player_fall(
         commands
             .spawn_bundle(SpriteBundle {
                 texture: textures.end.clone(),
+                transform: Transform::from_xyz(0., 0., END_Z),
                 ..SpriteBundle::default()
             })
             .insert(Level);

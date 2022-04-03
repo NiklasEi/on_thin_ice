@@ -1,4 +1,4 @@
-use crate::ice::IceLabels;
+use crate::ice::{get_random_direction, get_random_spawn_point, IceLabels, SpawnPoints};
 use crate::loading::TextureAssets;
 use crate::player::{AnimalFallEvent, Drowning};
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -15,7 +15,7 @@ impl Plugin for AnimalPlugin {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_animals))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(move_animals)
+                    .with_system(move_animals.before(IceLabels::CheckIceGrid))
                     .with_system(drown_animals.after(IceLabels::CheckIceGrid)),
             );
     }
@@ -30,16 +30,25 @@ pub struct Walking(Vec2);
 #[derive(Component)]
 pub struct Steering(Option<f32>);
 
-fn spawn_animals(mut commands: Commands, textures: Res<TextureAssets>) {
+fn spawn_animals(
+    mut commands: Commands,
+    textures: Res<TextureAssets>,
+    mut spawn_points: ResMut<SpawnPoints>,
+) {
+    let random_spawn_point = get_random_spawn_point(&mut spawn_points);
     commands
         .spawn_bundle(SpriteBundle {
             texture: textures.animal.clone(),
-            transform: Transform::from_translation(Vec3::new(150., 50., ANIMAL_Z)),
+            transform: Transform::from_translation(Vec3::new(
+                random_spawn_point.x,
+                random_spawn_point.y,
+                ANIMAL_Z,
+            )),
             ..Default::default()
         })
         .insert(Level)
         .insert(Animal)
-        .insert(Walking(Vec2::new(-1., -0.5)))
+        .insert(Walking(get_random_direction()))
         .insert(Steering(None));
 }
 

@@ -1,5 +1,6 @@
 use crate::actions::Actions;
 use crate::animate::AnimationTimer;
+use crate::ice::{get_random_spawn_point, IceLabels, SpawnPoints};
 use crate::loading::TextureAssets;
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
@@ -18,18 +19,30 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerFallEvent>()
             .add_event::<AnimalFallEvent>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_player))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_player));
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(move_player.before(IceLabels::CheckIceGrid)),
+            );
     }
 }
 
 pub struct PlayerFallEvent;
 pub struct AnimalFallEvent(pub Entity);
 
-fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
+fn spawn_player(
+    mut commands: Commands,
+    textures: Res<TextureAssets>,
+    mut spawn_points: ResMut<SpawnPoints>,
+) {
+    let random_spawn_point = get_random_spawn_point(&mut spawn_points);
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: textures.player.clone(),
-            transform: Transform::from_translation(Vec3::new(0., 0., PLAYER_Z)),
+            transform: Transform::from_translation(Vec3::new(
+                random_spawn_point.x,
+                random_spawn_point.y,
+                PLAYER_Z,
+            )),
             ..Default::default()
         })
         .insert(Player)

@@ -1,4 +1,4 @@
-use crate::loading::FontAssets;
+use crate::loading::{FontAssets, TextureAssets};
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -10,7 +10,8 @@ impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ButtonColors>()
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(setup_menu))
-            .add_system_set(SystemSet::on_update(GameState::Menu).with_system(click_play_button));
+            .add_system_set(SystemSet::on_update(GameState::Menu).with_system(click_play_button))
+            .add_system_set(SystemSet::on_exit(GameState::Menu).with_system(remove_menu));
     }
 }
 
@@ -32,6 +33,7 @@ fn setup_menu(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     button_colors: Res<ButtonColors>,
+    textures: Res<TextureAssets>,
 ) {
     commands
         .spawn_bundle(ButtonBundle {
@@ -61,7 +63,17 @@ fn setup_menu(
                 ..Default::default()
             });
         });
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: textures.info.clone(),
+            transform: Transform::from_xyz(0., 0., 1.),
+            ..SpriteBundle::default()
+        })
+        .insert(Menu);
 }
+
+#[derive(Component)]
+struct Menu;
 
 fn click_play_button(
     mut commands: Commands,
@@ -85,5 +97,11 @@ fn click_play_button(
                 *color = button_colors.normal;
             }
         }
+    }
+}
+
+fn remove_menu(mut commands: Commands, menu_elements: Query<Entity, With<Menu>>) {
+    for entity in menu_elements.iter() {
+        commands.entity(entity).despawn_recursive();
     }
 }

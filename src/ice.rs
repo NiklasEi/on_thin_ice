@@ -2,7 +2,10 @@ use crate::animal::Animal;
 use crate::loading::{CracksData, CracksLayer, PixelData, TextureAssets};
 use crate::player::{AnimalFallEvent, Drowning, Player, PlayerFallEvent};
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
+use bevy::math::Mat2;
 use bevy::prelude::*;
+use rand::random;
+use std::f32::consts::PI;
 
 const GRID_SIZE: usize = 10;
 const GRID_X: usize = 80;
@@ -13,6 +16,7 @@ const CRACKS_X: usize = 32;
 const CRACKS_Y: usize = 32;
 const DATA_PER_PIXEL: usize = 4;
 pub const ICE_HOLE_Z: f32 = 3.;
+pub const SPAWN_BORDER: f32 = 200.;
 
 pub struct IcePlugin;
 
@@ -42,7 +46,10 @@ impl Plugin for IcePlugin {
 fn prepare_cracks_layer(world: &mut World) {
     let cracks_layer = CracksLayer::from_world(world);
     world.insert_resource(cracks_layer);
+    world.insert_resource(SpawnPoints(vec![]));
 }
+
+pub struct SpawnPoints(pub Vec<Vec2>);
 
 fn spawn_ice(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn_bundle(SpriteBundle {
@@ -253,4 +260,36 @@ fn get_current_grid(translation: &Vec3) -> (usize, usize) {
 pub enum IceLabels {
     CheckIceGrid,
     BreakIce,
+}
+
+pub fn get_random_spawn_point(spawn_points: &mut SpawnPoints) -> Vec2 {
+    'attempt: loop {
+        let point = get_random_point();
+        for spawn_point in &spawn_points.0 {
+            if spawn_point.distance(point) < 100. {
+                continue 'attempt;
+            }
+        }
+        spawn_points.0.push(point.clone());
+        return point;
+    }
+}
+
+fn get_random_point() -> Vec2 {
+    let rand_x: f32 = random();
+    let rand_y: f32 = random();
+
+    let range_x = WINDOW_WIDTH - 2. * SPAWN_BORDER;
+    let range_y = WINDOW_HEIGHT - 2. * SPAWN_BORDER;
+
+    Vec2::new(
+        range_x * rand_x + SPAWN_BORDER - WINDOW_WIDTH / 2.,
+        range_y * rand_y + SPAWN_BORDER - WINDOW_HEIGHT / 2.,
+    )
+}
+
+pub fn get_random_direction() -> Vec2 {
+    let rand: f32 = random();
+    let rotation = Mat2::from_angle(rand * 2. * PI);
+    rotation.mul_vec2(Vec2::new(1., 0.))
 }

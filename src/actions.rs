@@ -1,3 +1,4 @@
+use crate::ice::get_random_direction;
 use crate::GameState;
 use bevy::math::Mat2;
 use bevy::prelude::*;
@@ -27,7 +28,7 @@ pub struct Actions {
 impl Default for Actions {
     fn default() -> Self {
         Actions {
-            direction: Vec2::new(0., 1.),
+            direction: get_random_direction(),
             steering: None,
         }
     }
