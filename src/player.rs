@@ -14,18 +14,21 @@ pub struct Player;
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
-                .with_system(spawn_player)
-                .with_system(spawn_camera),
-        )
-        .add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(move_player)
-                .with_system(animate_player),
-        );
+        app.add_event::<PlayerFallEvent>()
+            .add_system_set(
+                SystemSet::on_enter(GameState::Playing)
+                    .with_system(spawn_player)
+                    .with_system(spawn_camera),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(move_player)
+                    .with_system(animate_player),
+            );
     }
 }
+
+pub struct PlayerFallEvent;
 
 fn spawn_camera(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
@@ -45,9 +48,12 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
 #[derive(Component)]
 struct PlayerAnimationTimer(Timer);
 
+#[derive(Component)]
+pub struct Drowning;
+
 fn animate_player(
     time: Res<Time>,
-    mut query: Query<(&mut PlayerAnimationTimer, &mut TextureAtlasSprite)>,
+    mut query: Query<(&mut PlayerAnimationTimer, &mut TextureAtlasSprite), Without<Drowning>>,
 ) {
     for (mut timer, mut sprite) in query.iter_mut() {
         timer.0.tick(time.delta());
@@ -60,7 +66,7 @@ fn animate_player(
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<&mut Transform, (With<Player>, Without<Drowning>)>,
 ) {
     let speed = 100.;
     let movement = Vec3::new(

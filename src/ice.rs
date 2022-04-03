@@ -1,5 +1,5 @@
 use crate::loading::{CracksData, PixelData, TextureAssets};
-use crate::player::Player;
+use crate::player::{Player, PlayerFallEvent};
 use crate::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 
@@ -134,24 +134,52 @@ fn check_ice_grid(
     time: Res<Time>,
     mut grid: ResMut<IceGrid>,
     mut break_ice_events: EventWriter<BreakIceEvent>,
+    mut player_fall_event: EventWriter<PlayerFallEvent>,
 ) {
-    let player_translation = player.single().translation;
-    let (x, y) = get_current_grid(player_translation);
+    let translation = player.single().translation;
+    match update_and_return_ice_slot_state(
+        time.seconds_since_startup(),
+        translation.clone(),
+        &mut grid,
+    ) {
+        WasUpdated::Yes(SlotState::Brocken) => {
+            break_ice_events.send(BreakIceEvent {
+                position: Vec2::new(translation.x, translation.y),
+            });
+            // only for player
+            player_fall_event.send(PlayerFallEvent);
+        }
+        _ => (),
+    }
+}
+
+enum WasUpdated<T> {
+    Yes(T),
+    No(T),
+}
+
+fn update_and_return_ice_slot_state(
+    seconds_since_startup: f64,
+    translation: Vec3,
+    grid: &mut IceGrid,
+) -> WasUpdated<SlotState> {
+    let (x, y) = get_current_grid(translation);
     let state = grid.slots[y][x];
     if let SlotState::Ice = state {
-        grid.slots[y][x] = SlotState::Cracks {
-            step: time.seconds_since_startup(),
-        }
+        let cracked_state = SlotState::Cracks {
+            step: seconds_since_startup,
+        };
+        grid.slots[y][x] = cracked_state;
+
+        return WasUpdated::Yes(cracked_state);
     } else if let SlotState::Cracks { step } = state {
-        if time.seconds_since_startup() - step > 0.15 {
+        if seconds_since_startup - step > 0.15 {
             grid.slots[y][x] = SlotState::Brocken;
-            break_ice_events.send(BreakIceEvent {
-                position: Vec2::new(player_translation.x, player_translation.y),
-            });
+            return WasUpdated::Yes(SlotState::Brocken);
         }
-    } else {
-        warn!("walking on broken ice!");
     }
+
+    WasUpdated::No(state)
 }
 
 fn break_ice(

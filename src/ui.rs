@@ -1,5 +1,6 @@
 use crate::ice::IceLabels;
 use crate::loading::FontAssets;
+use crate::player::{Drowning, Player, PlayerFallEvent};
 use crate::GameState;
 use bevy::core::Stopwatch;
 use bevy::prelude::*;
@@ -12,7 +13,8 @@ impl Plugin for UiPlugin {
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_timer))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(update_timer.after(IceLabels::BreakIce)),
+                    .with_system(update_timer.after(IceLabels::BreakIce))
+                    .with_system(player_fall.after(IceLabels::CheckIceGrid)),
             );
     }
 }
@@ -78,4 +80,16 @@ fn update_timer(
 ) {
     game_stop_watch.0.tick(time.delta());
     timer_text.single_mut().sections[0].value = format!("{:.2}", game_stop_watch.0.elapsed_secs());
+}
+
+fn player_fall(
+    mut commands: Commands,
+    mut events: EventReader<PlayerFallEvent>,
+    mut game_stop_watch: ResMut<GameStopWatch>,
+    player: Query<Entity, With<Player>>,
+) {
+    for _ in events.iter() {
+        game_stop_watch.0.pause();
+        commands.entity(player.single()).insert(Drowning);
+    }
 }
