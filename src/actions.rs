@@ -38,26 +38,26 @@ fn set_movement_actions(
         || GameControl::Right.just_released(&keyboard_input)
         || GameControl::Right.pressed(&keyboard_input)
     {
-        let player_movement;
+        let steering;
 
         if GameControl::Right.just_released(&keyboard_input)
             || GameControl::Left.just_released(&keyboard_input)
         {
             if GameControl::Right.pressed(&keyboard_input) {
-                player_movement = 1.;
+                steering = 1.2;
             } else if GameControl::Left.pressed(&keyboard_input) {
-                player_movement = -1.;
+                steering = -1.2;
             } else {
-                player_movement = 0.;
+                steering = 0.;
             }
         } else if GameControl::Right.just_pressed(&keyboard_input) {
-            player_movement = 1.;
+            steering = 1.2;
         } else if GameControl::Left.just_pressed(&keyboard_input) {
-            player_movement = -1.;
+            steering = -1.2;
         } else {
-            player_movement = actions.steering.unwrap_or(0.);
+            steering = actions.steering.unwrap_or(0.);
         }
-        actions.steering = Some(player_movement);
+        actions.steering = Some(steering);
     } else {
         actions.steering = None;
     }
