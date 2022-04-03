@@ -102,7 +102,7 @@ fn player_fall(
 ) {
     for _ in events.iter() {
         game_stop_watch.0.pause();
-        commands.entity(player.single()).insert(Drowning);
+        commands.entity(player.single()).insert(Drowning::default());
         commands.insert_resource(RestartTimer::default());
     }
 }

@@ -8,7 +8,6 @@ use rand::random;
 
 pub struct InternalAudioPlugin;
 
-// This plugin is responsible to control the game audio
 impl Plugin for InternalAudioPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Channels>()
@@ -65,8 +64,8 @@ fn break_through_ice(
 
 fn random_ice_cracking(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
     let rand: f32 = random();
-    if rand < 0.002 {
-        let percent_rand = rand * 500.;
+    if rand < 0.003 {
+        let percent_rand = rand * 333.;
         let audio_handle = if percent_rand < 0.25 {
             audio_assets.ice_background_0.clone()
         } else if percent_rand < 0.5 {

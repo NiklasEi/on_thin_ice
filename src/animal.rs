@@ -87,6 +87,6 @@ fn move_animals(
 
 fn drown_animals(mut commands: Commands, mut animal_fall_events: EventReader<AnimalFallEvent>) {
     for AnimalFallEvent(animal) in animal_fall_events.iter() {
-        commands.entity(*animal).insert(Drowning);
+        commands.entity(*animal).insert(Drowning::default());
     }
 }

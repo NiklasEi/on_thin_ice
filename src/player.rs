@@ -1,4 +1,5 @@
 use crate::actions::Actions;
+use crate::animate::AnimationTimer;
 use crate::loading::TextureAssets;
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
@@ -17,11 +18,7 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerFallEvent>()
             .add_event::<AnimalFallEvent>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_player))
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing)
-                    .with_system(move_player)
-                    .with_system(animate),
-            );
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_player));
     }
 }
 
@@ -41,20 +38,11 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
 }
 
 #[derive(Component)]
-pub struct AnimationTimer(pub Timer);
+pub struct Drowning(pub Timer);
 
-#[derive(Component)]
-pub struct Drowning;
-
-fn animate(
-    time: Res<Time>,
-    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite), Without<Drowning>>,
-) {
-    for (mut timer, mut sprite) in query.iter_mut() {
-        timer.0.tick(time.delta());
-        if timer.0.finished() {
-            sprite.index = (sprite.index + 1) % 4;
-        }
+impl Default for Drowning {
+    fn default() -> Self {
+        Drowning(Timer::from_seconds(3., false))
     }
 }
 
