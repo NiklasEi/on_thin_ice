@@ -14,7 +14,7 @@ fn start_timer(mut commands: Commands) {
     commands.insert_resource(CountdownTimer::default());
 }
 
-struct CountdownTimer(Timer);
+pub struct CountdownTimer(pub Timer);
 
 impl Default for CountdownTimer {
     fn default() -> Self {

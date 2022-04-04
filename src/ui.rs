@@ -1,3 +1,4 @@
+use crate::countdown::CountdownTimer;
 use crate::ice::IceLabels;
 use crate::loading::{FontAssets, TextureAssets};
 use crate::menu::ButtonColors;
@@ -14,7 +15,15 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HighScore>()
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(spawn_high_score))
-            .add_system_set(SystemSet::on_enter(GameState::Countdown).with_system(spawn_timer))
+            .add_system_set(
+                SystemSet::on_enter(GameState::Countdown)
+                    .with_system(spawn_timer)
+                    .with_system(spawn_countdown),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Countdown).with_system(animate_countdown),
+            )
+            .add_system_set(SystemSet::on_exit(GameState::Countdown).with_system(remove_countdown))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(
@@ -259,4 +268,32 @@ fn click_restart_button(
 #[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
 pub enum UiLabels {
     UpdateTimer,
+}
+
+#[derive(Component)]
+struct Countdown;
+
+fn spawn_countdown(mut commands: Commands, textures: Res<TextureAssets>) {
+    let mut transform = Transform::from_xyz(0., 200., 3.);
+    transform.scale = Vec3::new(0.7, 0.7, 1.);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: textures.countdown.clone(),
+            transform,
+            ..SpriteSheetBundle::default()
+        })
+        .insert(Countdown);
+}
+
+fn animate_countdown(
+    timer: Res<CountdownTimer>,
+    mut countdown: Query<&mut TextureAtlasSprite, With<Countdown>>,
+) {
+    let index = (timer.0.percent() * 2.99) as usize;
+    let mut sprite = countdown.single_mut();
+    sprite.index = index;
+}
+
+fn remove_countdown(mut commands: Commands, countdown: Query<Entity, With<Countdown>>) {
+    commands.entity(countdown.single()).despawn();
 }

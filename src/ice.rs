@@ -226,7 +226,7 @@ fn update_and_return_ice_slot_state(
 
         return WasUpdated::Yes(cracked_state);
     } else if let SlotState::Cracks { step } = state {
-        if seconds_since_startup - step > 0.25 {
+        if seconds_since_startup - step > 0.4 {
             grid.slots[y][x] = SlotState::Brocken;
             return WasUpdated::Yes(SlotState::Brocken);
         }
