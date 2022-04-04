@@ -157,15 +157,73 @@ fn crack_ice_at(translation: &Vec3, cracks: &CracksData, cracks_layer: &mut Imag
     }
 }
 
+pub fn crack_border(image: &mut Image, cracks_data: &CracksData) {
+    let distance = 16.;
+    let per_row = (WINDOW_WIDTH / distance) as usize;
+    let per_column = (WINDOW_HEIGHT / distance) as usize;
+    for index in 1..per_row {
+        crack_ice_at(
+            &Vec3::new(
+                index as f32 * distance - WINDOW_WIDTH / 2.,
+                (WINDOW_HEIGHT / 2.) - distance,
+                0.,
+            ),
+            cracks_data,
+            image,
+        );
+        crack_ice_at(
+            &Vec3::new(
+                index as f32 * distance - WINDOW_WIDTH / 2.,
+                -(WINDOW_HEIGHT / 2.) + distance,
+                0.,
+            ),
+            cracks_data,
+            image,
+        );
+    }
+
+    for index in 2..per_column - 1 {
+        crack_ice_at(
+            &Vec3::new(
+                -WINDOW_WIDTH / 2. + distance,
+                index as f32 * distance - (WINDOW_HEIGHT / 2.),
+                0.,
+            ),
+            cracks_data,
+            image,
+        );
+        crack_ice_at(
+            &Vec3::new(
+                WINDOW_WIDTH / 2. - distance,
+                index as f32 * distance - (WINDOW_HEIGHT / 2.),
+                0.,
+            ),
+            cracks_data,
+            image,
+        );
+    }
+}
+
 struct IceGrid {
     slots: Vec<Vec<SlotState>>,
 }
 
 impl Default for IceGrid {
     fn default() -> Self {
-        let slots = Vec::from_iter(
+        let mut slots = Vec::from_iter(
             (0..GRID_Y).map(|_| Vec::from_iter((0..GRID_X).map(|_| SlotState::Ice))),
         );
+        slots[0] = Vec::from_iter((0..GRID_X).map(|_| SlotState::Cracks { step: 0. }));
+        slots[1] = Vec::from_iter((0..GRID_X).map(|_| SlotState::Cracks { step: 0. }));
+        slots[GRID_Y - 1] = Vec::from_iter((0..GRID_X).map(|_| SlotState::Cracks { step: 0. }));
+        slots[GRID_Y - 2] = Vec::from_iter((0..GRID_X).map(|_| SlotState::Cracks { step: 0. }));
+
+        for row in 0..GRID_Y {
+            slots[row][0] = SlotState::Cracks { step: 0. };
+            slots[row][1] = SlotState::Cracks { step: 0. };
+            slots[row][GRID_X - 1] = SlotState::Cracks { step: 0. };
+            slots[row][GRID_X - 2] = SlotState::Cracks { step: 0. };
+        }
 
         IceGrid { slots }
     }

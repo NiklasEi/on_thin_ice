@@ -1,3 +1,4 @@
+use crate::ice::crack_border;
 use crate::GameState;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
@@ -30,7 +31,8 @@ impl FromWorld for CracksLayer {
     fn from_world(world: &mut World) -> Self {
         let cell = world.cell();
         let mut images = cell.get_resource_mut::<Assets<Image>>().unwrap();
-        let layer = images.add(Image::new_fill(
+        let cracks_data = cell.get_resource::<CracksData>().unwrap();
+        let mut image = Image::new_fill(
             Extent3d {
                 width: 800,
                 height: 600,
@@ -39,7 +41,9 @@ impl FromWorld for CracksLayer {
             TextureDimension::D2,
             &[0u8, 0u8, 0u8, 0u8],
             TextureFormat::Rgba8UnormSrgb,
-        ));
+        );
+        crack_border(&mut image, &cracks_data);
+        let layer = images.add(image);
 
         CracksLayer { layer }
     }
@@ -124,9 +128,6 @@ fn filter_image_data(
 
     data
 }
-
-// the following asset collections will be loaded during the State `GameState::Loading`
-// when done loading, they will be inserted as resources (see https://github.com/NiklasEi/bevy_asset_loader)
 
 #[derive(AssetCollection)]
 pub struct FontAssets {

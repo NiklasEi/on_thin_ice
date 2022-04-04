@@ -15,16 +15,15 @@ pub const ANIMAL_Z: f32 = 4.;
 
 impl Plugin for AnimalPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpawnAnimalTimer(Timer::from_seconds(10., true)))
-            .add_system_set(
-                SystemSet::on_enter(GameState::Countdown).with_system(spawn_initial_animals),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing)
-                    .with_system(move_animals.before(IceLabels::CheckIceGrid))
-                    .with_system(drown_animals.after(IceLabels::CheckIceGrid))
-                    .with_system(spawn_animals),
-            );
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Countdown).with_system(spawn_initial_animals),
+        )
+        .add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(move_animals.before(IceLabels::CheckIceGrid))
+                .with_system(drown_animals.after(IceLabels::CheckIceGrid))
+                .with_system(spawn_animals),
+        );
     }
 }
 
@@ -78,6 +77,7 @@ fn spawn_initial_animals(
     textures: Res<TextureAssets>,
     mut spawn_points: ResMut<SpawnPoints>,
 ) {
+    commands.insert_resource(SpawnAnimalTimer(Timer::from_seconds(10., true)));
     for _ in 0..5 {
         let random_spawn_point = get_random_spawn_point(&mut spawn_points);
         let random_direction = get_random_direction();

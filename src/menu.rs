@@ -51,7 +51,7 @@ fn setup_menu(
             parent.spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
-                        value: "Enter the thin ice".to_string(),
+                        value: "Walk on thin ice".to_string(),
                         style: TextStyle {
                             font: font_assets.fira_sans.clone(),
                             font_size: 40.0,
