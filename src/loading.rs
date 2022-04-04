@@ -140,18 +140,8 @@ pub struct AudioAssets {
     pub walking: Handle<AudioSource>,
     #[asset(path = "audio/background.ogg")]
     pub background: Handle<AudioSource>,
-    #[asset(path = "audio/blub.ogg")]
-    pub blub: Handle<AudioSource>,
     #[asset(path = "audio/ice_breaking.ogg")]
     pub breaking_ice: Handle<AudioSource>,
-    #[asset(path = "audio/ice_background_0.ogg")]
-    pub ice_background_0: Handle<AudioSource>,
-    #[asset(path = "audio/ice_background_1.ogg")]
-    pub ice_background_1: Handle<AudioSource>,
-    #[asset(path = "audio/ice_background_2.ogg")]
-    pub ice_background_2: Handle<AudioSource>,
-    #[asset(path = "audio/ice_background_3.ogg")]
-    pub ice_background_3: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection)]
