@@ -2,6 +2,7 @@ mod actions;
 mod animal;
 mod animate;
 mod audio;
+mod countdown;
 mod ice;
 mod loading;
 mod menu;
@@ -16,6 +17,7 @@ use crate::player::PlayerPlugin;
 
 use crate::animal::AnimalPlugin;
 use crate::animate::AnimatePlugin;
+use crate::countdown::CountdownPlugin;
 use crate::ice::IcePlugin;
 use crate::ui::UiPlugin;
 use bevy::app::App;
@@ -29,6 +31,7 @@ pub const WINDOW_HEIGHT: f32 = 600.;
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
     Loading,
+    Countdown,
     Playing,
     Menu,
     Restart,
@@ -47,7 +50,8 @@ impl Plugin for GamePlugin {
             .add_plugin(InternalAudioPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(AnimalPlugin)
-            .add_plugin(AnimatePlugin);
+            .add_plugin(AnimatePlugin)
+            .add_plugin(CountdownPlugin);
 
         app.add_system_set(SystemSet::on_exit(GameState::Loading).with_system(setup_cameras))
             .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(despawn_level))
@@ -70,7 +74,7 @@ fn setup_cameras(mut commands: Commands) {
 }
 
 fn restart(mut state: ResMut<State<GameState>>) {
-    state.set(GameState::Playing).unwrap();
+    state.set(GameState::Countdown).unwrap();
 }
 
 fn despawn_level(mut commands: Commands, level_entities: Query<Entity, With<Level>>) {

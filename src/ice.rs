@@ -25,11 +25,13 @@ impl Plugin for IcePlugin {
         app.init_resource::<CrackTheIceTimer>()
             .add_event::<BreakIceEvent>()
             .add_system_set(
-                SystemSet::on_enter(GameState::Playing)
+                SystemSet::on_enter(GameState::Countdown)
                     .with_system(prepare_cracks_layer.exclusive_system().at_start()),
             )
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(spawn_ice))
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_cracks_layer))
+            .add_system_set(
+                SystemSet::on_enter(GameState::Countdown).with_system(spawn_cracks_layer),
+            )
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(crack_the_ice)

@@ -14,7 +14,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HighScore>()
             .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(spawn_high_score))
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_timer))
+            .add_system_set(SystemSet::on_enter(GameState::Countdown).with_system(spawn_timer))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(

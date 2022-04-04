@@ -12,7 +12,7 @@ pub const ANIMAL_Z: f32 = 4.;
 
 impl Plugin for AnimalPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_animals))
+        app.add_system_set(SystemSet::on_enter(GameState::Countdown).with_system(spawn_animals))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(move_animals.before(IceLabels::CheckIceGrid))
@@ -25,7 +25,7 @@ impl Plugin for AnimalPlugin {
 pub struct Animal;
 
 #[derive(Component)]
-pub struct Walking(Vec2);
+pub struct Walking(pub Vec2);
 
 #[derive(Component)]
 pub struct Steering(Option<f32>);
@@ -37,19 +37,23 @@ fn spawn_animals(
 ) {
     for _ in 0..5 {
         let random_spawn_point = get_random_spawn_point(&mut spawn_points);
+        let random_direction = get_random_direction();
+        let mut transform = Transform::from_translation(Vec3::new(
+            random_spawn_point.x,
+            random_spawn_point.y,
+            ANIMAL_Z,
+        ));
+        transform.rotation =
+            Quat::from_rotation_z(-random_direction.angle_between(Vec2::new(0., 1.)));
         commands
             .spawn_bundle(SpriteBundle {
                 texture: textures.animal.clone(),
-                transform: Transform::from_translation(Vec3::new(
-                    random_spawn_point.x,
-                    random_spawn_point.y,
-                    ANIMAL_Z,
-                )),
+                transform,
                 ..Default::default()
             })
             .insert(Level)
             .insert(Animal)
-            .insert(Walking(get_random_direction()))
+            .insert(Walking(random_direction))
             .insert(Steering(None));
     }
 }

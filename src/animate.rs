@@ -1,4 +1,5 @@
 use crate::player::Drowning;
+use crate::GameState;
 use bevy::prelude::*;
 
 pub struct AnimatePlugin;
@@ -6,7 +7,7 @@ pub struct AnimatePlugin;
 impl Plugin for AnimatePlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-            SystemSet::new()
+            SystemSet::on_update(GameState::Playing)
                 .with_system(animate_walking)
                 .with_system(animate_drowning),
         );

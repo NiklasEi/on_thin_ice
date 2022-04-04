@@ -88,7 +88,7 @@ fn click_play_button(
         match *interaction {
             Interaction::Clicked => {
                 commands.entity(button).despawn_recursive();
-                state.set(GameState::Playing).unwrap();
+                state.set(GameState::Countdown).unwrap();
             }
             Interaction::Hovered => {
                 *color = button_colors.hovered;

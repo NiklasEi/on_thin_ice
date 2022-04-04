@@ -1,12 +1,8 @@
-use crate::ice::get_random_direction;
 use crate::GameState;
-use bevy::math::Mat2;
 use bevy::prelude::*;
 
 pub struct ActionsPlugin;
 
-// This plugin listens for keyboard input and converts the input into Actions
-// Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
@@ -21,24 +17,16 @@ fn initialize(mut commands: Commands) {
 }
 
 pub struct Actions {
-    pub direction: Vec2,
     pub steering: Option<f32>,
 }
 
 impl Default for Actions {
     fn default() -> Self {
-        Actions {
-            direction: get_random_direction(),
-            steering: None,
-        }
+        Actions { steering: None }
     }
 }
 
-fn set_movement_actions(
-    mut actions: ResMut<Actions>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-) {
+fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
     if GameControl::Left.just_released(&keyboard_input)
         || GameControl::Left.pressed(&keyboard_input)
         || GameControl::Right.just_released(&keyboard_input)
@@ -66,11 +54,6 @@ fn set_movement_actions(
         actions.steering = Some(steering);
     } else {
         actions.steering = None;
-    }
-
-    if let Some(steering) = actions.steering {
-        let rotation = Mat2::from_angle(-steering * time.delta_seconds());
-        actions.direction = rotation.mul_vec2(actions.direction);
     }
 }
 
