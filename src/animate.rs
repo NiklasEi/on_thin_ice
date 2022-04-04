@@ -31,7 +31,7 @@ fn animate_walking(
 fn animate_drowning(time: Res<Time>, mut query: Query<(&mut Drowning, &mut Transform)>) {
     for (mut timer, mut transform) in query.iter_mut() {
         if timer.0.finished() {
-            return;
+            continue;
         }
         timer.0.tick(time.delta());
         transform.scale = Vec3::new(1.0 - timer.0.percent(), 1.0 - timer.0.percent(), 1.);

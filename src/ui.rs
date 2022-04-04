@@ -67,7 +67,7 @@ fn spawn_timer(mut commands: Commands, font_assets: Res<FontAssets>) {
                             style: TextStyle {
                                 font: font_assets.fira_sans.clone(),
                                 font_size: 40.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
+                                color: Color::rgb_u8(34, 32, 52),
                             },
                         }],
                         alignment: Default::default(),
@@ -110,7 +110,7 @@ fn spawn_high_score(mut commands: Commands, font_assets: Res<FontAssets>) {
                             style: TextStyle {
                                 font: font_assets.fira_sans.clone(),
                                 font_size: 40.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
+                                color: Color::rgb_u8(34, 32, 52),
                             },
                         }],
                         alignment: Default::default(),
