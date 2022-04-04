@@ -1,4 +1,7 @@
-use crate::ice::{get_random_direction, get_random_spawn_point, IceLabels, SpawnPoints};
+use crate::animate::{AnimationTimer, Falling};
+use crate::ice::{
+    get_random_direction, get_random_point, get_random_spawn_point, IceLabels, SpawnPoints,
+};
 use crate::loading::TextureAssets;
 use crate::player::{AnimalFallEvent, Drowning};
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -12,13 +15,53 @@ pub const ANIMAL_Z: f32 = 4.;
 
 impl Plugin for AnimalPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Countdown).with_system(spawn_animals))
+        app.insert_resource(SpawnAnimalTimer(Timer::from_seconds(10., true)))
+            .add_system_set(
+                SystemSet::on_enter(GameState::Countdown).with_system(spawn_initial_animals),
+            )
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(move_animals.before(IceLabels::CheckIceGrid))
-                    .with_system(drown_animals.after(IceLabels::CheckIceGrid)),
+                    .with_system(drown_animals.after(IceLabels::CheckIceGrid))
+                    .with_system(spawn_animals),
             );
     }
+}
+
+#[derive(Component)]
+struct SpawnAnimalTimer(Timer);
+
+fn spawn_animals(
+    mut commands: Commands,
+    mut timer: ResMut<SpawnAnimalTimer>,
+    time: Res<Time>,
+    textures: Res<TextureAssets>,
+) {
+    timer.0.tick(time.delta());
+    if !timer.0.just_finished() {
+        return;
+    }
+
+    let random_spawn_point = get_random_point(100.);
+    let random_direction = get_random_direction();
+    let mut transform = Transform::from_translation(Vec3::new(
+        random_spawn_point.x,
+        random_spawn_point.y,
+        ANIMAL_Z,
+    ));
+    transform.rotation = Quat::from_rotation_z(-random_direction.angle_between(Vec2::new(0., 1.)));
+    commands
+        .spawn_bundle(SpriteBundle {
+            texture: textures.animal.clone(),
+            transform,
+            ..Default::default()
+        })
+        .insert(Level)
+        .insert(Animal)
+        .insert(Falling)
+        .insert(AnimationTimer(Timer::from_seconds(2., false)))
+        .insert(Walking(random_direction))
+        .insert(Steering(None));
 }
 
 #[derive(Component)]
@@ -30,7 +73,7 @@ pub struct Walking(pub Vec2);
 #[derive(Component)]
 pub struct Steering(Option<f32>);
 
-fn spawn_animals(
+fn spawn_initial_animals(
     mut commands: Commands,
     textures: Res<TextureAssets>,
     mut spawn_points: ResMut<SpawnPoints>,
@@ -62,7 +105,7 @@ fn move_animals(
     time: Res<Time>,
     mut player_query: Query<
         (&mut Transform, &mut Walking, &mut Steering),
-        (With<Animal>, Without<Drowning>),
+        (With<Animal>, Without<Drowning>, Without<Falling>),
     >,
 ) {
     let speed = 50.;

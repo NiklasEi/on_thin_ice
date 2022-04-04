@@ -1,4 +1,5 @@
 use crate::animal::Animal;
+use crate::animate::Falling;
 use crate::loading::{CracksData, CracksLayer, PixelData, TextureAssets};
 use crate::player::{AnimalFallEvent, Drowning, Player, PlayerFallEvent};
 use crate::{GameState, Level, WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -80,8 +81,24 @@ impl Default for CrackTheIceTimer {
 }
 
 fn crack_the_ice(
-    player: Query<&Transform, (With<Player>, Without<Animal>)>,
-    animals: Query<&Transform, (With<Animal>, Without<Player>)>,
+    player: Query<
+        &Transform,
+        (
+            With<Player>,
+            Without<Animal>,
+            Without<Falling>,
+            Without<Drowning>,
+        ),
+    >,
+    animals: Query<
+        &Transform,
+        (
+            With<Animal>,
+            Without<Player>,
+            Without<Falling>,
+            Without<Drowning>,
+        ),
+    >,
     mut images: ResMut<Assets<Image>>,
     textures: Res<CracksLayer>,
     cracks: Res<CracksData>,
@@ -95,8 +112,9 @@ fn crack_the_ice(
     let cracks_layer = images
         .get_mut(textures.layer.clone())
         .expect("Failed to find the cracks_layer texture");
-    let player_transform = player.single();
-    crack_ice_at(&player_transform.translation, &cracks, cracks_layer);
+    if let Ok(player_transform) = player.get_single() {
+        crack_ice_at(&player_transform.translation, &cracks, cracks_layer);
+    }
 
     for animal_transform in animals.iter() {
         crack_ice_at(&animal_transform.translation, &cracks, cracks_layer);
@@ -166,7 +184,15 @@ struct BreakIceEvent {
 
 fn check_ice_grid(
     player: Query<&Transform, (With<Player>, Without<Animal>, Without<Drowning>)>,
-    animals: Query<(Entity, &Transform), (With<Animal>, Without<Player>, Without<Drowning>)>,
+    animals: Query<
+        (Entity, &Transform),
+        (
+            With<Animal>,
+            Without<Player>,
+            Without<Drowning>,
+            Without<Falling>,
+        ),
+    >,
     time: Res<Time>,
     mut grid: ResMut<IceGrid>,
     mut break_ice_events: EventWriter<BreakIceEvent>,
@@ -266,7 +292,7 @@ pub enum IceLabels {
 
 pub fn get_random_spawn_point(spawn_points: &mut SpawnPoints) -> Vec2 {
     'attempt: loop {
-        let point = get_random_point();
+        let point = get_random_point(SPAWN_BORDER);
         for spawn_point in &spawn_points.0 {
             if spawn_point.distance(point) < 100. {
                 continue 'attempt;
@@ -277,16 +303,16 @@ pub fn get_random_spawn_point(spawn_points: &mut SpawnPoints) -> Vec2 {
     }
 }
 
-fn get_random_point() -> Vec2 {
+pub fn get_random_point(border: f32) -> Vec2 {
     let rand_x: f32 = random();
     let rand_y: f32 = random();
 
-    let range_x = WINDOW_WIDTH - 2. * SPAWN_BORDER;
-    let range_y = WINDOW_HEIGHT - 2. * SPAWN_BORDER;
+    let range_x = WINDOW_WIDTH - 2. * border;
+    let range_y = WINDOW_HEIGHT - 2. * border;
 
     Vec2::new(
-        range_x * rand_x + SPAWN_BORDER - WINDOW_WIDTH / 2.,
-        range_y * rand_y + SPAWN_BORDER - WINDOW_HEIGHT / 2.,
+        range_x * rand_x + border - WINDOW_WIDTH / 2.,
+        range_y * rand_y + border - WINDOW_HEIGHT / 2.,
     )
 }
 
